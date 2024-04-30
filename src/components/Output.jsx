@@ -3,11 +3,15 @@ import { runCode } from "../api";
 const Output = ({ editorRef, language }) => {
   const [answer, setAnswer] = useState(null);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+
   const stdinRef = useRef();
   const executeCode = async () => {
     const sourceCode = editorRef.current.getValue();
     if (!sourceCode) return;
     try {
+      setIsLoading(true);
       const response = await runCode(
         language,
         sourceCode,
@@ -18,12 +22,13 @@ const Output = ({ editorRef, language }) => {
     } catch (error) {
       setError(error.message);
     }
+    setIsLoading(false);
   };
 
   return (
     <>
       <button
-        className="btn my-5"
+        className={`${isLoading ? "loading loading-neutral": "btn"} my-5`}
         onClick={executeCode}
       >
         Run
