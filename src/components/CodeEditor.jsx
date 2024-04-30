@@ -37,9 +37,8 @@ const CodeEditor = () => {
             fontSize: 20,
           }}
         />
-        ;
       </div>
-      <div className="w-1/2 h-1/2">
+      <div className="flex-1 h-[75vh]">
         <Output editorRef={editorRef} language={language} />
       </div>
     </div>

@@ -2,11 +2,11 @@ import React from "react";
 import { LANGUAGE_VERSIONS } from "../Language";
 
 const languages = Object.entries(LANGUAGE_VERSIONS);
-const LanguageSelector = ({ onSelect , language }) => {
+const LanguageSelector = ({ onSelect, language }) => {
   return (
-    <div>
+    <div className="my-5">
       <select
-        className="bg-slate-900 text-white p-2 m-5 rounded"
+        className="select w-full max-w-xs"
         name="language"
         id="language"
         value={language}
