@@ -28,7 +28,7 @@ const Output = ({ editorRef, language }) => {
   return (
     <>
       <button
-        className={`${isLoading ? "loading loading-neutral": "btn"} my-5`}
+        className={`${isLoading ? "loading loading-neutral my-10": "btn"} my-5`}
         onClick={executeCode}
       >
         Run
@@ -38,7 +38,7 @@ const Output = ({ editorRef, language }) => {
           <input
             type="text"
             placeholder="Enter the input here..."
-            className="input h-full w-full bg-[#1e1e1e] p-5 rounded-t"
+            className="input h-full w-full bg-[#303030] p-5 rounded-t"
             ref={stdinRef}
           />
         </div>
