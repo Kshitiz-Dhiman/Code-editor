@@ -97,39 +97,38 @@ const CodeEditor = () => {
         editor.focus();
     };
 
-    const onSelect = (newLanguage) => {
-        const oldLanguage = language;
-        setLanguage(newLanguage);
 
-        if (provider && editor) {
-            const yText = ydoc.getText('monaco');
-            const currentContent = yText.toString();
-
-            // if (currentContent === LANGUAGE_SNIPPETS[oldLanguage] || currentContent.trim() === "") {
-            //     yText.delete(0, yText.length);
-            //     if (LANGUAGE_SNIPPETS[newLanguage]) {
-            //         yText.insert(0, LANGUAGE_SNIPPETS[newLanguage]);
-            //     }
-            // }
-        }
-    };
 
     return (
-        <Editor
-            height="100%"
-            width="100%"
-            theme="ayu-dark"
-            language={language}
-            onMount={onMount}
-            options={{
-                fontSize: 20,
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-                wordWrap: 'on'
-            }}
-        />
-
+        <>
+            <div className="mb-10"> {isConnected ? (
+                <div className="flex justify-between  items-center px-4 py-2 bg-[#1C2128] text-white">
+                    <div className={`flex items-center gap-1 ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+                        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                        {isConnected ? 'Connected' : 'Disconnected'} {connectedUsers > 0 && `(${connectedUsers} user${connectedUsers > 1 ? 's' : ''})`}
+                        {roomname && <span className="ml-2 text-gray-500">Room: {roomname}</span>}
+                    </div>
+                </div>
+            ) : (
+                <div className="flex justify-between items-center px-4 py-2 bg-[#1C2128] text-white">
+                    <div className="text-gray-500">Connecting...</div>
+                </div>
+            )}</div>
+            <Editor
+                height="100%"
+                width="100%"
+                theme="ayu-dark"
+                language={language}
+                onMount={onMount}
+                options={{
+                    fontSize: 20,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    wordWrap: 'on'
+                }}
+            />
+        </>
     );
 };
 
