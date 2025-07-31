@@ -1,9 +1,8 @@
-import React from 'react'
 import CodeEditor from './components/CodeEditor'
 import "./App.css"
 const App = () => {
     return (
-        <div className='h-screen w-full bg-[#101419]  p-10'>
+        <div className='h-screen bg-[#101419] w-full pt-10'>
             <CodeEditor />
         </div>
     )

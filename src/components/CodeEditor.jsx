@@ -1,8 +1,11 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import Editor, { useMonaco } from "@monaco-editor/react";
 import LanguageSelector from "./LanguageSelector";
 import { LANGUAGE_SNIPPETS } from "../Language";
 import Output from "./Output";
+import * as Y from "yjs";
+import { MonacoBinding } from "y-monaco";
+import { WebsocketProvider } from "y-websocket";
 
 const ayuDarkTheme = {
     base: "vs-dark",
@@ -32,11 +35,17 @@ const ayuDarkTheme = {
     },
 };
 
+const roomname = `code-editor-${new Date().toLocaleDateString('en-CA')}`;
+
 const CodeEditor = () => {
-    const editorRef = useRef();
+    const ydoc = useMemo(() => new Y.Doc(), []);
     const monaco = useMonaco();
-    const [value, setvalue] = useState("");
     const [language, setLanguage] = useState("javascript");
+    const [editor, setEditor] = useState(null);
+    const [provider, setProvider] = useState(null);
+    const [binding, setBinding] = useState(null);
+    const [isConnected, setIsConnected] = useState(false);
+    const [connectedUsers, setConnectedUsers] = useState(0);
 
     useEffect(() => {
         if (monaco) {
@@ -45,35 +54,82 @@ const CodeEditor = () => {
         }
     }, [monaco]);
 
-    const onMount = (editor) => {
-        editorRef.current = editor;
+    useEffect(() => {
+        const provider = new WebsocketProvider('wss://demos.yjs.dev/ws', roomname, ydoc);
+        setProvider(provider);
+
+        provider.on('status', (event) => {
+            setIsConnected(event.status === 'connected');
+        });
+
+        provider.awareness.on('update', () => {
+            setConnectedUsers(provider.awareness.getStates().size);
+        });
+
+        return () => {
+            provider?.destroy();
+            ydoc.destroy();
+        };
+    }, [ydoc]);
+
+    useEffect(() => {
+        if (provider == null || editor == null) {
+            return;
+        }
+
+        const yText = ydoc.getText('Hello');
+
+        const binding = new MonacoBinding(
+            yText,
+            editor.getModel(),
+            new Set([editor]),
+            provider.awareness
+        );
+        setBinding(binding);
+
+        return () => {
+            binding.destroy();
+        };
+    }, [ydoc, provider, editor, language]);
+
+    const onMount = (editor, monaco) => {
+        setEditor(editor);
         editor.focus();
     };
 
-    const onSelect = (language) => {
-        setLanguage(language);
-        setvalue(LANGUAGE_SNIPPETS[language]);
+    const onSelect = (newLanguage) => {
+        const oldLanguage = language;
+        setLanguage(newLanguage);
+
+        if (provider && editor) {
+            const yText = ydoc.getText('monaco');
+            const currentContent = yText.toString();
+
+            // if (currentContent === LANGUAGE_SNIPPETS[oldLanguage] || currentContent.trim() === "") {
+            //     yText.delete(0, yText.length);
+            //     if (LANGUAGE_SNIPPETS[newLanguage]) {
+            //         yText.insert(0, LANGUAGE_SNIPPETS[newLanguage]);
+            //     }
+            // }
+        }
     };
 
     return (
-        <div className="flex border-1">
-            <div className="flex-1 w-1/2">
-                <LanguageSelector language={language} onSelect={onSelect} />
-                <Editor
-                    height="75vh"
-                    theme="ayu-dark"
-                    language={language}
-                    value={value}
-                    defaultValue={LANGUAGE_SNIPPETS[language]}
-                    onMount={onMount}
-                    onChange={(value) => setvalue(value)}
-                    options={{ fontSize: 20 }}
-                />
-            </div>
-            <div className="flex-1 h-[75vh]">
-                <Output editorRef={editorRef} language={language} />
-            </div>
-        </div>
+        <Editor
+            height="100%"
+            width="100%"
+            theme="ayu-dark"
+            language={language}
+            onMount={onMount}
+            options={{
+                fontSize: 20,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                wordWrap: 'on'
+            }}
+        />
+
     );
 };
 
