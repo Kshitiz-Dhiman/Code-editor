@@ -39,6 +39,7 @@ const roomname = `code-editor-${new Date().toLocaleDateString('en-CA')}`;
 
 const CodeEditor = () => {
     const ydoc = useMemo(() => new Y.Doc(), []);
+    const [diffroom, setdiffroom] = useState(roomname)
     const monaco = useMonaco();
     const [language, setLanguage] = useState("javascript");
     const [editor, setEditor] = useState(null);
@@ -53,7 +54,8 @@ const CodeEditor = () => {
             monaco.editor.setTheme("ayu-dark");
         }
     }, [monaco]);
-
+    // URL : ws://localhost:3000/socket.io
+    // DEMO_URL : wss://demos.yjs.dev/ws
     useEffect(() => {
         const provider = new WebsocketProvider('wss://demos.yjs.dev/ws', roomname, ydoc);
         setProvider(provider);
@@ -97,16 +99,43 @@ const CodeEditor = () => {
         editor.focus();
     };
 
+    const createNewRoom = (newRoomName) => {
+        if (!newRoomName || newRoomName.trim() === '') {
+            alert("Please enter a valid room name.");
+            return;
+        }
+        if (provider) {
+            provider.destroy();
+        }
+        if (binding) {
+            binding.destroy();
+        }
+
+        const newProvider = new WebsocketProvider('wss://demos.yjs.dev/ws', newRoomName, ydoc);
+        setdiffroom(newRoomName);
+        setProvider(newProvider);
+
+        newProvider.on('status', (event) => {
+            setIsConnected(event.status === 'connected');
+        });
+
+        newProvider.awareness.on('update', () => {
+            setConnectedUsers(newProvider.awareness.getStates().size);
+        });
+    };
 
 
     return (
         <>
             <div className="mb-10"> {isConnected ? (
-                <div className="flex justify-between  items-center px-4 py-2 bg-[#1C2128] text-white">
+                <div className="flex justify-between items-center px-4 py-2 bg-[#1C2128] text-white">
                     <div className={`flex items-center gap-1 ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
                         <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
                         {isConnected ? 'Connected' : 'Disconnected'} {connectedUsers > 0 && `(${connectedUsers} user${connectedUsers > 1 ? 's' : ''})`}
-                        {roomname && <span className="ml-2 text-gray-500">Room: {roomname}</span>}
+                        {/* {roomname && <span className="ml-2 text-gray-500">Room: {roomname}</span>} */}
+                        <span className="ml-2 text-gray-500">Room name :</span>
+                        <input className="rounded-lg px-2 py-1 bg-[#2A313C] text-white" type="text" value={diffroom} onChange={(e) => setdiffroom(e.target.value)} />
+                        <button className="ml-2 px-4 py-1 bg-blue-500 text-white rounded-lg" onClick={() => createNewRoom(diffroom)}>Enter new room</button>
                     </div>
                 </div>
             ) : (
